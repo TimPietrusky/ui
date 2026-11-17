@@ -62,9 +62,9 @@ function byId(el: Element, id: string) {
   return root.getElementById?.(id) ?? null
 }
 
-// The text of the elements aria-labelledby names, each by its aria-label or its content.
-function labelledByOf(el: Element) {
-  return (el.getAttribute("aria-labelledby") ?? "")
+// The text of the elements aria-labelledby or aria-describedby names, each by its aria-label or its content.
+function referencedText(el: Element, attribute: string) {
+  return (el.getAttribute(attribute) ?? "")
     .split(/\s+/)
     .map((id) => id && byId(el, id))
     .filter((label) => !!label)
@@ -96,7 +96,7 @@ function nameWithin(el: Element, labelling: boolean, hidden: boolean) {
     return ""
   }
   const own =
-    (!labelling && labelledByOf(el)) ||
+    (!labelling && referencedText(el, "aria-labelledby")) ||
     el.getAttribute("aria-label")?.trim() ||
     embeddedName(el)
   if (own) {
@@ -139,7 +139,7 @@ const labelsOf = (el: Element) =>
 
 // Where a name comes from, in the order browsers take them.
 const nameSources = [
-  labelledByOf,
+  (el: Element) => referencedText(el, "aria-labelledby"),
   (el: Element) => el.getAttribute("aria-label") ?? "",
   labelsOf,
   embeddedName,
@@ -178,4 +178,26 @@ function hasAccessibleName(el: Element) {
   return firstName(el, labelsLast) !== ""
 }
 
-export { accessibleName, hasAccessibleName, namedByContent, roleOf }
+/**
+ * An approximate accessible description
+ * (https://w3c.github.io/html-aam/#accdesc-computation): the text of what
+ * `aria-describedby` names, else `aria-description`, else a `title` that
+ * doesn't name the element, with whitespace collapsed.
+ */
+function accessibleDescription(el: Element) {
+  return (
+    collapse(referencedText(el, "aria-describedby")) ||
+    collapse(el.getAttribute("aria-description") ?? "") ||
+    (firstName(el, nameSources.slice(0, -1))
+      ? collapse(el.getAttribute("title") ?? "")
+      : "")
+  )
+}
+
+export {
+  accessibleDescription,
+  accessibleName,
+  hasAccessibleName,
+  namedByContent,
+  roleOf,
+}

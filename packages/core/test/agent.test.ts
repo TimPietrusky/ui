@@ -1416,6 +1416,45 @@ describe("agent", () => {
     })
   })
 
+  test("query gives a component's description, but not a secret field's, and the snapshot leaves it out", async () => {
+    const agent = createAgent()
+    const settings = button({ id: "settings" })
+    const trigger = document.body.appendChild(document.createElement("button"))
+    trigger.setAttribute("aria-label", "Voice settings")
+    trigger.title = "Speaks: Kokoro"
+    const code = input({ id: "code" })
+    const field = document.body.appendChild(document.createElement("input"))
+    field.setAttribute("aria-label", "Code")
+    field.setAttribute("aria-describedby", "hint")
+    document.body.insertAdjacentHTML("beforeend", `<p id="hint">Six digits</p>`)
+    const pin = input({ id: "pin" })
+    const region = document.body.appendChild(document.createElement("div"))
+    region.setAttribute("data-agent-secret", "")
+    const secret = region.appendChild(document.createElement("input"))
+    secret.setAttribute("aria-label", "PIN")
+    secret.setAttribute("aria-description", "Starts with 4")
+    cleanups.push(
+      bind(settings.part("root"), trigger),
+      () => settings.destroy(),
+      bind(code.part("root"), field),
+      () => code.destroy(),
+      bind(pin.part("root"), secret),
+      () => pin.destroy()
+    )
+    expect(await agent.query({ text: "Voice settings" })).toMatchObject([
+      { label: "Voice settings", description: "Speaks: Kokoro" },
+    ])
+    expect(await agent.query({ within: "Code" })).toMatchObject([
+      { label: "Code", description: "Six digits" },
+    ])
+    expect((await agent.query({ text: "PIN" })) as AgentComponent[]).toEqual([
+      expect.not.objectContaining({ description: expect.anything() }),
+    ])
+    expect(
+      agent.snapshot().filter((component) => "description" in component)
+    ).toEqual([])
+  })
+
   test("a date picker takes a date without opening its calendar to look for an item", async () => {
     const agent = createAgent()
     const instance = datePicker({ id: "start" })

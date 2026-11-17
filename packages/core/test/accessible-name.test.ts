@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, expect, test, vi } from "vitest"
 import {
+  accessibleDescription,
   accessibleName,
   hasAccessibleName,
 } from "../src/foundation/text/accessible-name"
@@ -141,4 +142,27 @@ test("a button only its label names has a name", () => {
     nameIn(`<label for="target">Save</label><button id="target"></button>`)
   ).toBe("Save")
   expect(hasAccessibleName(document.getElementById("target")!)).toBe(true)
+})
+
+test("a description comes from aria-describedby, then aria-description, then a title that doesn't name it", () => {
+  const described = (markup: string) => {
+    document.body.innerHTML = markup
+    return accessibleDescription(document.getElementById("target")!)
+  }
+  expect(
+    described(
+      `<span id="a">Opens  the</span><span id="b" hidden>settings</span><button id="target" aria-describedby="a b" aria-description="Ignored">Gear</button>`
+    )
+  ).toBe("Opens the settings")
+  expect(
+    described(
+      `<button id="target" aria-description="Opens the settings">Gear</button>`
+    )
+  ).toBe("Opens the settings")
+  expect(
+    described(
+      `<button id="target" aria-label="Settings" title="Speaks: Kokoro"></button>`
+    )
+  ).toBe("Speaks: Kokoro")
+  expect(described(`<button id="target" title="Settings"></button>`)).toBe("")
 })

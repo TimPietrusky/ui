@@ -46,6 +46,7 @@ Each entry describes one registered component with bound elements, or a remember
 | `component`                                                                    | Its kind, such as `"input"`, `"select"`, or a custom primitive's name.                                          |
 | `label`                                                                        | Its accessible name, when available.                                                                            |
 | `row`                                                                          | Nearby row text that helps identify it, such as the person beside a menu.                                       |
+| `description`                                                                  | Its accessible description, such as a button's tooltip or a field's hint. From `query` only; see below.         |
 | State keys                                                                     | Its exposed state, commonly `value`, `checked`, or `open`. See [Custom Primitives](#custom-primitives).         |
 | `min`, `max`, `step`, `placeholder`, `query`, `multiple`, `required`, `errors` | Additional state when present and meaningful.                                                                   |
 | `items`                                                                        | Included choices as `{ value, label }[]`. Use `query()` when the snapshot doesn't include the choices you need. |
@@ -154,6 +155,8 @@ const [region] = found
 | `text`   | Matches a component's label or row text by whole words, regardless of case and accents. A list whose choices match comes back with only those choices. |
 | `within` | Names one list by its ref or label, and returns it with its choices, matching `text` when given.                                                       |
 | `kind`   | Keeps one kind of component, such as `"select"`.                                                                                                       |
+
+Each component `query` returns also carries its accessible `description` when it has one: the text of what `aria-describedby` names, `aria-description`, or a `title` that doesn't name it. That's where a button's tooltip or a field's hint lives. `snapshot` leaves it out to stay short. A secret field has no description.
 
 Pass at least one. Returns an `AgentComponent[]` of up to 100 entries, ending with a `more` entry like the snapshot's when there were more. A list's `items` hold up to 50 matching choices as `{ value, label }`, with `more` set to how many matched beyond that. A choice matches `text` by a case- and accent-insensitive substring of its label or value. An unknown or ambiguous `within`, or a call with no input, returns `{ error: string }`. Components that left the page are included with `offPage: true`.
 

@@ -2,6 +2,7 @@
 // import from another folder against this list. Nothing imports this file, so bundles
 // don't pay for it.
 export {
+  accessibleDescription,
   accessibleName,
   hasAccessibleName,
   namedByContent,
